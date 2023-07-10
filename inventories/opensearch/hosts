@@ -1,0 +1,29 @@
+elk-test ansible_host=xx.xx.xx.xx roles=data,master
+#opensearch-2 ansible_host=xx.xx.xx.xx roles=data,master
+#opensearch-3 ansible_host=xx.xx.xx.xx roles=data,master
+#os4 ansible_host=10.0.1.4 ip=10.0.1.4 roles=data,ingest
+#os5 ansible_host=10.0.1.5 ip=10.0.1.5 roles=data,ingest
+
+dashboards1 ansible_host=192.168.18.52
+
+# List all the nodes in the os cluster
+[os-cluster]
+elk-test
+#opensearch-2
+#opensearch-3
+#os4
+#os5
+
+# List all the Master eligible nodes under this group
+[master]
+elk-test
+#opensearch-2
+#opensearch-3
+
+[dashboards]
+dashboards1
+
+[all:vars]
+ansible_connection=ssh
+ansible_user='name of user'
+ansible_ssh_private_key_file='/path/to/your/ssh-key'

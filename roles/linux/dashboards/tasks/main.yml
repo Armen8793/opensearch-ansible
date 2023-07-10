@@ -1,0 +1,52 @@
+---
+
+- hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: add proxy
+  ansible.builtin.lineinfile:
+    path: /etc/environment
+    line: "{{ item }}"
+  loop:
+    - ftp_proxy=http://192.168.113.34:8080/
+    - http_proxy=http://192.168.113.34:8080/
+    - https_proxy=http://192.168.113.34:8080/
+    - no_proxy=localhost,192.168.116.58,192.168.116.59,192.168.116.60,192.168.0.0/16,*armbusinessbank.am,*armbusinessbank.local
+
+- name: export proxy
+  shell:
+    cmd: "export {{ item }}"
+  loop:
+    - ftp_proxy=http://192.168.113.34:8080/
+    - http_proxy=http://192.168.113.34:8080/
+    - https_proxy=http://192.168.113.34:8080/
+    - no_proxy=localhost,192.168.116.58,192.168.116.59,192.168.116.60,192.168.0.0/16,*armbusinessbank.am,*armbusinessbank.local
+
+# Disabling for Amazon Linux 2 as selinux is disabled by default.
+- name: Disable the selinux
+  selinux:
+    state: disabled
+  when: (ansible_distribution != "Ubuntu") and (ansible_distribution != "Amazon")
+
+- name: Populate the nodes to /etc/hosts
+  import_tasks: etchosts.yml
+
+- name: Tune the system settings
+  import_tasks: tune.yml
+
+- name: include dashboards installation
+  include: dashboards.yml
+
+- name: Make sure opensearch dashboards is started
+  service:
+    name: dashboards
+    state: started
+    enabled: yes
+
+- name: Get all the installed dashboards plugins
+  command: "sudo -u {{ os_dashboards_user }} {{ os_plugin_bin_path }} list"
+  register: list_plugins
+
+- name: Show all the installed dashboards plugins
+  debug:
+    msg: "{{ list_plugins.stdout }}"
